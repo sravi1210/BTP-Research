@@ -92,7 +92,5 @@ int main(){
 	cout<<"Cost E2E: "<<E2E<<" times of 1-Hop E2E"<<endl;
 	cout<<"Total Cost By Greedy Algorithm: "<<((gamma*C2E)+E2E)<<" times of 1-Hop E2E"<<endl; 
 
-
-
 	return 0;
 }
