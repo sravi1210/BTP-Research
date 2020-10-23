@@ -1,5 +1,5 @@
 # To Compile Program Use:
-	$ g++ fileName.cpp
+	$ g++ filename.cpp
 
 # To Run Program Use:
-	$ ./a.out < input.txt >
+	$ ./a.out < input_FileName.txt 
