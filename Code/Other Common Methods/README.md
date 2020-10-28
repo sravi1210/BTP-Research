@@ -2,4 +2,4 @@
 	$ g++ filename.cpp
 
 # To Run Program Use:
-	$ ./a.out < input_FileName.txt 
+	$ ./a.out < ../TestCases/input_FileName.txt 
