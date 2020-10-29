@@ -1,5 +1,5 @@
 # Different Approaches in Comparison:
-	## 1. Greedy Connectivity (GC) 
+## 1. Greedy Connectivity (GC) 
 	In this approach, we define the connectivity of an edge server as the
 	number of edge servers in R (set of the destination edge servers i.e.
 	servers which can be directly connected to the cloud) that have yet to
@@ -9,14 +9,14 @@
 	destination edge servers in R can receive the data within the EDD (Edge
 	Data Distribution) time constraint limit of dlimit.
 
-	## 2. Random 
-	This approach randomly selects edge servers	to receive the data from the
-	cloud, which then transmit	the data to other destination edge servers in
-	R, one after another, until all the destination edge servers in R receive
-	the data within the EDD (Edge Data Distribution) time constraint limit of 
-	dlimit.
+## 2. Random 
+	This approach randomly selects the edge servers to receive the data from
+	the cloud, which then transmit the data to other destination edge servers
+	in R, one after another, until all the destination edge servers in R
+	receive the data within the EDD (Edge Data Distribution) time constraint
+	limit of dlimit.
 
-	## 3. EDD-A Algorithm
+## 3. EDD-A Algorithm
 	In this approach, we first calculate a Connectivity-oriented Minimum
 	Steiner Tree (CMST) using an O(2) approximation method. This method
 	calculates a minimum Steiner Tree having cost at most twice of the optimal
