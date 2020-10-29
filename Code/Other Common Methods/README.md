@@ -7,20 +7,15 @@
 	the EDD (Edge Data Distribution) time constraint limit of dlimit.
 
 ## 2. Random 
-	This approach randomly selects the edge servers to receive the data from
-	the cloud, which then transmit the data to other destination edge servers
-	in R, one after another, until all the destination edge servers in R
-	receive the data within the EDD (Edge Data Distribution) time constraint
-	limit of dlimit.
+	This approach randomly selects the edge servers to receive the data from the cloud, which then transmit the data to other
+	destination edge servers in R, one after another, until all the destination edge servers in R receive the data within the
+	EDD (Edge Data Distribution) time constraint limit of dlimit.
 
 ## 3. EDD-A Algorithm
-	In this approach, we first calculate a Connectivity-oriented Minimum
-	Steiner Tree (CMST) using an O(2) approximation method. This method
-	calculates a minimum Steiner Tree having cost at most twice of the optimal
-	Steiner Tree on the graph G(V, E). After that we use a heuristic algorithm
-	to calculate the minimum cost of transmission incurred using edge-to-edge
-	and cloud-to-edge servers on the approximated CMST. This algorithm is
-	proved to have an O(k) approximation solution.
+	In this approach, we first calculate a Connectivity-oriented Minimum Steiner Tree (CMST) using an O(2) approximation method.
+	This method calculates a minimum Steiner Tree having cost at most twice of the optimal Steiner Tree on the graph G(V, E). After
+	that we use a heuristic algorithm to calculate the minimum cost of transmission incurred using edge-to-edge and cloud-to-edge servers
+	on the approximated CMST. This algorithm is proved to have an O(k) approximation solution.
 
 # To Compile Program Use:
 	$ g++ fileName.cpp
