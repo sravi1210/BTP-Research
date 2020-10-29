@@ -1,13 +1,6 @@
 # Different Approaches in Comparison:
 ## 1. Greedy Connectivity (GC) 
-	In this approach, we define the connectivity of an edge server as the
-	number of edge servers in R (set of the destination edge servers i.e.
-	servers which can be directly connected to the cloud) that have yet to
-	receive the data. This approach always selects the edge servers with the
-	highest connectivity to receive data from the cloud, which will then
-	transmit the data to other destination edge servers in R, until all the 
-	destination edge servers in R can receive the data within the EDD (Edge
-	Data Distribution) time constraint limit of dlimit.
+	In this approach, we define the connectivity of an edge server as the number of edge servers in R (set of the destination edge servers i.e. servers which can be directly connected to the cloud) that have yet to receive the data. This approach always selects the edge servers with the	highest connectivity to receive data from the cloud, which will then	transmit the data to other destination edge servers in R, until all the	destination edge servers in R can receive the data within the EDD (Edge	Data Distribution) time constraint limit of dlimit.
 
 ## 2. Random 
 	This approach randomly selects the edge servers to receive the data from
