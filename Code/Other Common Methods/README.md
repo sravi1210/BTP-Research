@@ -12,14 +12,14 @@
 	EDD (Edge Data Distribution) time constraint limit of dlimit.
 
 ## 3. EDD-A Algorithm
-	In this approach, we first calculate a Connectivity-oriented Minimum Steiner Tree (CMST) using an O(2) approximation method.
-	This method calculates a minimum Steiner Tree having cost at most twice of the optimal Steiner Tree on the graph G(V, E). After
-	that we use a heuristic algorithm to calculate the minimum cost of transmission incurred using edge-to-edge and cloud-to-edge servers
-	on the approximated CMST. This algorithm is proved to have an O(k) approximation solution.
+	In this approach, we first calculate a Connectivity-oriented Minimum Steiner Tree (CMST) using an O(2) approximation
+	method. This method calculates a minimum Steiner Tree having cost at most twice of the optimal Steiner Tree on the graph
+	G(V, E). After that we use a heuristic algorithm to calculate the minimum cost of transmission incurred using edge-to-edge
+	and cloud-to-edge servers on the approximated CMST. This algorithm is proved to have an O(k) approximation solution.
 
-# To Compile Program Use:
+## $ To Compile Program Use:
 	$ g++ fileName.cpp
 
-# To Run Program Use:
+## To Run Program Use:
 	$ ./a.out < ../TestCases/inputFileName.txt 
 
