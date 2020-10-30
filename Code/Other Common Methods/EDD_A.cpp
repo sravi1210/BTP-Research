@@ -5,6 +5,33 @@ using namespace std;
 #define F first
 #define ll long long int
 
+// Global variables for Graph, EDDA, CMST, destination edge servers, CMST nodes and edges.
+vector<vector<ll>> G;
+map<ll, ll> cmstNodes;
+vector<vector<ll>> cmst;
+vector<vector<ll>> eddA;
+map<ll, ll> destination_edge;
+map<pair<ll, ll>, ll> cmstEdges;
+
+// Function to initialize global variables.
+void initialize(ll V){
+	G.clear();
+	cmst.clear();
+	eddA.clear();
+	destination_edge.clear();
+	cmstNodes.clear();
+	cmstEdges.clear();
+
+	for(ll i=0;i<=V;i++){
+		vector<ll> temp;
+		G.push_back(temp);
+		eddA.push_back(temp);
+		cmst.push_back(temp);
+	}
+	return;
+}
+
+// Function to print the tree.
 void printTree(vector<vector<ll>> dp){
 	ll size = dp.size();
 	for(ll i=0;i<size;i++){
@@ -20,7 +47,8 @@ void printTree(vector<vector<ll>> dp){
 	return;
 }
 
-map<pair<ll, ll>, pair<ll, ll>> closestNodes(vector<vector<ll>> &G, vector<bool> &visited){
+// Function to return closest nodes to the current set of visited nodes.
+map<pair<ll, ll>, pair<ll, ll>> closestNodes(vector<bool> &visited){
 	map<pair<ll, ll>, pair<ll,ll>> mp;
 	ll size = visited.size();
 
@@ -40,7 +68,41 @@ map<pair<ll, ll>, pair<ll, ll>> closestNodes(vector<vector<ll>> &G, vector<bool>
 	return mp;
 }
 
-void BFS(vector<vector<ll>> &cmst, vector<ll> &depths, ll node, ll height){
+// Function to update edges following triangle inequality.
+void updateEdges(vector<ll> &depths, vector<bool> &visited, ll index){
+	ll size = visited.size();
+	vector<bool> nvisited(size, false);
+	nvisited[index] = true;
+
+	deque<pair<ll, ll>> dq;
+	dq.push_back({index, 1});
+	while(!dq.empty()){
+		pair<ll, ll> p = dq.front();
+		dq.pop_front();
+		ll parent = p.first;
+		ll height = p.second;
+		size = G[parent].size();
+		for(ll i=0;i<size;i++){
+			ll child = G[parent][i];
+			if(!visited[child] && !nvisited[child] && cmstNodes.find(child) != cmstNodes.end()){
+				if(depths[child] > height + 1){
+					depths[child] = height + 1;
+					dq.push_back({child, height+1});
+					if(cmstEdges.find({parent, child}) == cmstEdges.end()){
+						cmstEdges[{parent, child}] = 1;
+						cmst[parent].push_back(child);
+					}
+					nvisited[child] = true;
+				}
+			}
+		}
+	}
+
+	return;
+}
+
+// Function to do BFS traversal on the graph.
+void BFS(vector<ll> &depths, ll node, ll height){
 	deque<pair<ll, ll>> dq;
 	dq.push_back({node, height});
 	depths[node] = height;
@@ -61,7 +123,8 @@ void BFS(vector<vector<ll>> &cmst, vector<ll> &depths, ll node, ll height){
 	return;
 }
 
-void DFS(vector<vector<ll>> &cmst, vector<vector<ll>> &eddA, vector<ll> &depths, map<ll, ll> &destination_edge, vector<bool> &visited, ll index, ll d_limit){
+// Function to do DFS traversal on the graph.
+void DFS(vector<ll> &depths, vector<bool> &visited, ll index, ll d_limit){
 	ll size = cmst[index].size();
 	for(ll i=0;i<size;i++){
 		ll child = cmst[index][i];
@@ -69,29 +132,31 @@ void DFS(vector<vector<ll>> &cmst, vector<vector<ll>> &eddA, vector<ll> &depths,
 			if(depths[child] <= d_limit && destination_edge.find(child) != destination_edge.end()){
 				eddA[index].push_back(child);
 				visited[child] = true;
-				DFS(cmst, eddA, depths, destination_edge, visited, child, d_limit);
+				DFS(depths, visited, child, d_limit);
 			}
 			else if(destination_edge.find(child) == destination_edge.end()){
 				eddA[index].push_back(child);
 				visited[child] = true;
-				DFS(cmst, eddA, depths, destination_edge, visited, child, d_limit);
+				DFS(depths, visited, child, d_limit);
 			}
 			else if(depths[child] > d_limit && destination_edge.find(child) != destination_edge.end()){
 				depths[child] = 1;
 				eddA[0].push_back(child);
 				visited[child] = true;
-				BFS(cmst, depths, child, 1);
-				DFS(cmst, eddA, depths, destination_edge, visited, child, d_limit);
+				updateEdges(depths, visited, child);
+				BFS(depths, child, 1);
+				DFS(depths, visited, child, d_limit);
 			} 
 		}
 	}
 	return;
 }
 
-vector<vector<ll>> CMST(vector<vector<ll>> &G, map<ll, ll> &destination_edge, ll V){
-	vector<vector<ll>> cmst(V+1, vector<ll>());
+// Function to calculate the connectivity oriented minimum Steiner Tree on the graph.
+void CMST(ll V){
 	vector<bool> visited(V+1, false);
 	visited[0] = true;
+	cmstNodes[0] = 1;
 
 	while(true){
 		ll count = 0;
@@ -104,7 +169,7 @@ vector<vector<ll>> CMST(vector<vector<ll>> &G, map<ll, ll> &destination_edge, ll
 			break;
 		}
 		
-		map<pair<ll, ll>, pair<ll, ll>> mp = closestNodes(G, visited);
+		map<pair<ll, ll>, pair<ll, ll>> mp = closestNodes(visited);
 
 		ll maxConnectivity = LONG_MIN;
 		ll minCost = LONG_MAX;
@@ -121,21 +186,24 @@ vector<vector<ll>> CMST(vector<vector<ll>> &G, map<ll, ll> &destination_edge, ll
 		}
 		if(parent != -1 && child != -1){
 			cmst[parent].push_back(child);
+			cmstNodes[child] = 1;
+			cmstNodes[parent] = 1;
+			cmstEdges[{parent, child}] = 1;
 			visited[child] = true;
 		}
 	}
 
-	return cmst;
+	return;
 }
 
-vector<vector<ll>> EDD_A(vector<vector<ll>> &cmst, map<ll, ll> &destination_edge, ll V, ll d_limit){
-	vector<vector<ll>> eddA(V+1);
+// Fnction to calculate EDD approximation on the calculated steiner tree.
+void EDD_A(ll V, ll d_limit){
 	vector<ll> depths(V+1, INT_MAX);
-	BFS(cmst, depths, 0, 0);
+	BFS(depths, 0, 0);
 	vector<bool> visited(V+1, false);
 	visited[0] = true;
-	DFS(cmst, eddA, depths, destination_edge, visited, 0, d_limit);
-	return eddA;
+	DFS(depths, visited, 0, d_limit);
+	return;
 }
 
 int main(){
@@ -147,8 +215,7 @@ int main(){
 
 	d_limit += 1;
 
-	vector<vector<ll>> G(V+1, vector<ll>());      // Graph G(V, E).
-	map<ll, ll> destination_edge;
+	initialize(V);
 
 	for(ll i=0;i<E;i++){        // Create the graph with given edges.
 		ll node1, node2;
@@ -167,11 +234,11 @@ int main(){
 		destination_edge[node] = 1;
 	}
 
-	vector<vector<ll>> cmst = CMST(G, destination_edge, V);
+	CMST(V);
 	cout<<"Minimum Steiner Tree Edge List:"<<endl; 
 	printTree(cmst);
 
-	vector<vector<ll>> eddA = EDD_A(cmst, destination_edge, V, d_limit);
+	EDD_A(V, d_limit);
 	cout<<endl<<"Final EDD Approximated Tree is:"<<endl;
 	printTree(eddA);
 
@@ -185,6 +252,7 @@ int main(){
 			E2E += eddA[i].size();
 		}
 	}
+
 
 	cout<<endl<<"Cost C2E: "<<C2E<<" times of 1-Hop E2E"<<endl;
 	cout<<"Cost E2E: "<<E2E<<" times of 1-Hop E2E"<<endl;
