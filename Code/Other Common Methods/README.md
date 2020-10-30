@@ -17,7 +17,7 @@
 	G(V, E). After that we use a heuristic algorithm to calculate the minimum cost of transmission incurred using edge-to-edge
 	and cloud-to-edge servers on the approximated CMST. This algorithm is proved to have an O(k) approximation solution.
 
-## $ To Compile Program Use:
+## To Compile Program Use:
 	$ g++ fileName.cpp
 
 ## To Run Program Use:
