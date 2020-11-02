@@ -233,7 +233,7 @@ void reduceWeight(vector<vector<ll>> &dp, ll index){
 
 void fillW(ll V){
 	vector<vector<ll>> F(V+1, vector<ll>(V+1, -1));
-	F = createCopy(Gdash);
+	F = createCopy(GRdash);
 	ll size = triples.size();
 	vector<bool> visited(size, false);
 
