@@ -8,9 +8,11 @@ using namespace std;
 // Global variables for Graph, EDDA, CMST, destination edge servers, CMST nodes and edges.
 map<ll, ll> Wnodes;
 vector<vector<ll>> G;
+vector<vector<ll>> ZST;
 vector<vector<ll>> Gdash;
 vector<vector<ll>> GRdash;
 vector<vector<ll>> triples;
+vector<pair<ll,ll>> ZSTedges;
 map<ll, ll> destination_edge;
 vector<pair<ll, ll>> centroidTriples;
 
@@ -29,16 +31,19 @@ void printMachine(vector<vector<ll>> dp){
 // Function to initialize global variables.
 void initialize(ll V){
 	G.clear();
+	ZST.clear();
 	Gdash.clear();
+	Wnodes.clear();
 	GRdash.clear();
 	triples.clear();
-	Wnodes.clear();
+	ZSTedges.clear();
 	centroidTriples.clear();
 	destination_edge.clear();
 
 	for(ll i=0;i<=V;i++){
 		vector<ll> temp(V+1, -1);
 		G.push_back(temp);
+		ZST.push_back(temp);
 		Gdash.push_back(temp);
 		GRdash.push_back(temp);
 	}
@@ -179,7 +184,7 @@ void solveTriples(ll V){
 	return;
 }
 
-ll solveMST(vector<vector<ll>> dp){
+ll solveMST(vector<vector<ll>> dp, bool check){
 	ll row = dp.size();
 	ll col = dp[0].size();
 	vector<bool> visited(row, false);
@@ -191,7 +196,7 @@ ll solveMST(vector<vector<ll>> dp){
 		ll y = -1;
 		for(ll i=0;i<row;i++){
 			for(ll j=0;j<col;j++){
-				if(dp[i][j]!=-1){
+				if(i!=j && dp[i][j]!=-1){
 					if(!(visited[i] && visited[j])){
 						if(dp[i][j] < minEdge){
 							minEdge = dp[i][j];
@@ -206,6 +211,9 @@ ll solveMST(vector<vector<ll>> dp){
 			weightSum += minEdge;
 			visited[x] = true;
 			visited[y] = true;
+			if(check){
+				ZSTedges.push_back({x, y});
+			}
 		}
 		count++;
 	}
@@ -230,7 +238,7 @@ void fillW(ll V){
 	vector<bool> visited(size, false);
 
 	while(true){
-		ll mstF = solveMST(F);
+		ll mstF = solveMST(F, false);
 		ll win = LLONG_MIN;
 		ll VZ = -1;
 		ll index = -1;
@@ -240,7 +248,7 @@ void fillW(ll V){
 				vector<vector<ll>> FZ(V+1, vector<ll>(V+1, -1));
 				FZ = createCopy(F);
 				reduceWeight(FZ, i);
-				ll mstFZ = solveMST(FZ);
+				ll mstFZ = solveMST(FZ, false);
 				if(win < (mstF - mstFZ - DZ)){
 					win = mstF - mstFZ - DZ;
 					VZ = centroidTriples[i].F;
@@ -262,6 +270,35 @@ void fillW(ll V){
 	return;
 }
 
+void findST(ll V){
+	vector<ll> nodes;
+	for(ll i=0;i<=V;i++){
+		if((destination_edge.find(i) != destination_edge.end()) || (Wnodes.find(i) != Wnodes.end())){
+			nodes.push_back(i);
+		}
+	}
+	ll size = nodes.size();
+	vector<vector<ll>> ZSTtemp(V+1, vector<ll>(V+1, -1));
+	for(ll i=0;i<size;i++){
+		ll x = nodes[i];
+		for(ll j=0;j<size;j++){
+			ll y = nodes[j];
+			ZSTtemp[x][y] = Gdash[x][y];
+		}
+	}
+
+	solveMST(ZSTtemp, true);
+	size = ZSTedges.size();
+	for(ll i=0;i<size;i++){
+		ll x = ZSTedges[i].F;
+		ll y = ZSTedges[i].S;
+		cout<<x<<" "<<y<<endl;
+		ZST[x][y] = Gdash[x][y];
+		ZST[y][x] = Gdash[y][x];
+	}
+	return;
+}
+
 int main(){
 	ll V, E, R;          // V - Vertex, E - Edges,  R - Destination Edge Servers.
 	cin>>V>>E>>R;
@@ -278,7 +315,8 @@ int main(){
 	createTriples(V);
 	solveTriples(V);
 	fillW(V);
-	// findST();
+	findST(V);
+	// printMachine(ZST);
 
 	return 0;
 }
