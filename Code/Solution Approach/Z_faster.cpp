@@ -9,6 +9,7 @@ using namespace std;
 map<ll, ll> Wnodes;
 vector<vector<ll>> G;
 vector<vector<ll>> Gdash;
+map<ll, map<ll, ll>> ZST;
 vector<vector<ll>> triples;
 map<ll, map<ll, ll>> GRdash;
 vector<pair<ll,ll>> MSTedges;
@@ -30,6 +31,7 @@ void printMachine(vector<vector<ll>> dp){
 // Function to initialize global variables.
 void initialize(ll V){
 	G.clear();
+	ZST.clear();
 	Gdash.clear();
 	Wnodes.clear();
 	GRdash.clear();
@@ -350,34 +352,34 @@ void fillW(ll V){
 	return;
 }
 
-// void findST(ll V){
-// 	vector<ll> nodes;
-// 	for(ll i=0;i<=V;i++){
-// 		if((destination_edge.find(i) != destination_edge.end()) || (Wnodes.find(i) != Wnodes.end())){
-// 			nodes.push_back(i);
-// 		}
-// 	}
-// 	ll size = nodes.size();
-// 	vector<vector<ll>> ZSTtemp(V+1, vector<ll>(V+1, -1));
-// 	for(ll i=0;i<size;i++){
-// 		ll x = nodes[i];
-// 		for(ll j=0;j<size;j++){
-// 			ll y = nodes[j];
-// 			ZSTtemp[x][y] = Gdash[x][y];
-// 		}
-// 	}
+void findST(ll V){
+	vector<ll> nodes;
+	for(ll i=0;i<=V;i++){
+		if((destination_edge.find(i) != destination_edge.end()) || (Wnodes.find(i) != Wnodes.end())){
+			nodes.push_back(i);
+		}
+	}
+	ll size = nodes.size();
+	map<ll, map<ll, ll>> ZSTtemp;
+	for(ll i=0;i<size;i++){
+		ll x = nodes[i];
+		for(ll j=0;j<size;j++){
+			ll y = nodes[j];
+			ZSTtemp[x][y] = Gdash[x][y];
+		}
+	}
 
-// 	solveMST(ZSTtemp, V);
-// 	size = MSTedges.size();
-// 	for(ll i=0;i<size;i++){
-// 		ll x = MSTedges[i].F;
-// 		ll y = MSTedges[i].S;
-// 		cout<<x<<" "<<y<<endl;
-// 		ZST[x][y] = Gdash[x][y];
-// 		ZST[y][x] = Gdash[y][x];
-// 	}
-// 	return;
-// }
+	solveMST(ZSTtemp, V);
+	size = MSTedges.size();
+	for(ll i=0;i<size;i++){
+		ll x = MSTedges[i].F;
+		ll y = MSTedges[i].S;
+		cout<<x<<" "<<y<<endl;
+		ZST[x][y] = Gdash[x][y];
+		ZST[y][x] = Gdash[y][x];
+	}
+	return;
+}
 
 int main(){
 	ll V, E, R;          // V - Vertex, E - Edges,  R - Destination Edge Servers.
@@ -395,7 +397,7 @@ int main(){
 	createTriples(V);
 	solveTriples(V);
 	fillW(V);
-	// findST(V);
+	findST(V);
 
 	return 0;
 }
