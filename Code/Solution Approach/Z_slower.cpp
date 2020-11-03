@@ -8,20 +8,23 @@ using namespace std;
 // Global variables for Graph, EDDA, CMST, destination edge servers, CMST nodes and edges.
 map<ll, ll> Wnodes;
 vector<vector<ll>> G;
-vector<vector<ll>> ZST;
 vector<vector<ll>> Gdash;
-vector<vector<ll>> GRdash;
+map<ll, map<ll, ll>> ZST;
 vector<vector<ll>> triples;
-vector<pair<ll,ll>> ZSTedges;
+map<ll, map<ll, ll>> GRdash;
+vector<pair<ll,ll>> MSTedges;
 map<ll, ll> destination_edge;
 vector<pair<ll, ll>> centroidTriples;
 
-void printMachine(vector<vector<ll>> dp){
-	ll row = dp.size();
-	ll col = dp[0].size();
-	for(ll i=0;i<row;i++){
-		for(ll j=0;j<col;j++){
-			cout<<dp[i][j]<<" ";
+void printMachine(map<ll, map<ll, ll>> dp){
+	for(auto i : dp){
+		ll a = i.first;
+		if(dp[a].size() > 0){
+			cout<<a<<": ";
+		}
+		for(auto j : dp[a]){
+			ll b = j.first;
+			cout<<"("<<b<<" "<<dp[a][b]<<") ";
 		}
 		cout<<endl;
 	}
@@ -36,16 +39,14 @@ void initialize(ll V){
 	Wnodes.clear();
 	GRdash.clear();
 	triples.clear();
-	ZSTedges.clear();
+	MSTedges.clear();
 	centroidTriples.clear();
 	destination_edge.clear();
 
 	for(ll i=0;i<=V;i++){
 		vector<ll> temp(V+1, -1);
 		G.push_back(temp);
-		ZST.push_back(temp);
 		Gdash.push_back(temp);
-		GRdash.push_back(temp);
 	}
 	return;
 }
@@ -156,7 +157,7 @@ void createTriples(ll V){
 	return;
 }
 
-vector<vector<ll>> createCopy(vector<vector<ll>> dp){
+map<ll, map<ll, ll>> createCopy(map<ll, map<ll, ll>> dp){
 	return dp;
 }
 
@@ -184,24 +185,27 @@ void solveTriples(ll V){
 	return;
 }
 
-ll solveMST(vector<vector<ll>> dp, bool check){
-	ll row = dp.size();
-	ll col = dp[0].size();
-	vector<bool> visited(row, false);
+ll solveMST(map<ll, map<ll, ll>> dp, ll V){
+	MSTedges.clear();
+	ll size = dp.size();
+	vector<bool> visited(V+1, false);
 	ll weightSum = 0;
 	ll count = 0;
-	while(count<row){
+	while(count<size){
 		ll minEdge = LLONG_MAX;
 		ll x = -1;
 		ll y = -1;
-		for(ll i=0;i<row;i++){
-			for(ll j=0;j<col;j++){
-				if(i!=j && dp[i][j]!=-1){
-					if(!(visited[i] && visited[j])){
-						if(dp[i][j] < minEdge){
-							minEdge = dp[i][j];
-							x = i;
-							y = j;
+
+		for(auto i : dp){
+			ll a = i.first;
+			for(auto j : dp[a]){
+				ll b = j.first;
+				if(a!=b && dp[a][b]!=-1){
+					if(!(visited[a] && visited[b])){
+						if(dp[a][b] < minEdge){
+							minEdge = dp[a][b];
+							x = a;
+							y = b;
 						}
 					}
 				}
@@ -211,16 +215,14 @@ ll solveMST(vector<vector<ll>> dp, bool check){
 			weightSum += minEdge;
 			visited[x] = true;
 			visited[y] = true;
-			if(check){
-				ZSTedges.push_back({x, y});
-			}
+			MSTedges.push_back({x, y});
 		}
 		count++;
 	}
 	return weightSum;
 }
 
-void reduceWeight(vector<vector<ll>> &dp, ll index){
+void reduceWeight(map<ll, map<ll, ll>> &dp, ll index){
 	ll node1 = triples[index][0];
 	ll node2 = triples[index][1];
 	ll node3 = triples[index][2];
@@ -232,23 +234,24 @@ void reduceWeight(vector<vector<ll>> &dp, ll index){
 }
 
 void fillW(ll V){
-	vector<vector<ll>> F(V+1, vector<ll>(V+1, -1));
+	map<ll, map<ll, ll>> F;
 	F = createCopy(GRdash);
 	ll size = triples.size();
 	vector<bool> visited(size, false);
 
 	while(true){
-		ll mstF = solveMST(F, false);
+		ll mstF = solveMST(F, V);
 		ll win = LLONG_MIN;
 		ll VZ = -1;
 		ll index = -1;
 		for(ll i=0;i<size;i++){
 			if(!visited[i]){
 				ll DZ = centroidTriples[i].S;
-				vector<vector<ll>> FZ(V+1, vector<ll>(V+1, -1));
+				map<ll, map<ll, ll>> FZ;
 				FZ = createCopy(F);
 				reduceWeight(FZ, i);
-				ll mstFZ = solveMST(FZ, false);
+				ll mstFZ = solveMST(FZ, V);
+
 				if(win < (mstF - mstFZ - DZ)){
 					win = mstF - mstFZ - DZ;
 					VZ = centroidTriples[i].F;
@@ -256,17 +259,16 @@ void fillW(ll V){
 				}
 			}
 		}
-		if(win <= 0){
+		if(win <= 0 || VZ == -1 || index == -1){
 			return;
 		}
 		visited[index] = true;
-		vector<vector<ll>> FZ(V+1, vector<ll>(V+1, -1));
+		map<ll, map<ll, ll>> FZ;
 		FZ = createCopy(F);
 		reduceWeight(FZ, index);
 		F = createCopy(FZ);
 		Wnodes[VZ] = 1;
 	}
-
 	return;
 }
 
@@ -278,7 +280,7 @@ void findST(ll V){
 		}
 	}
 	ll size = nodes.size();
-	vector<vector<ll>> ZSTtemp(V+1, vector<ll>(V+1, -1));
+	map<ll, map<ll, ll>> ZSTtemp;
 	for(ll i=0;i<size;i++){
 		ll x = nodes[i];
 		for(ll j=0;j<size;j++){
@@ -287,11 +289,11 @@ void findST(ll V){
 		}
 	}
 
-	solveMST(ZSTtemp, true);
-	size = ZSTedges.size();
+	solveMST(ZSTtemp, V);
+	size = MSTedges.size();
 	for(ll i=0;i<size;i++){
-		ll x = ZSTedges[i].F;
-		ll y = ZSTedges[i].S;
+		ll x = MSTedges[i].F;
+		ll y = MSTedges[i].S;
 		cout<<x<<" "<<y<<endl;
 		ZST[x][y] = Gdash[x][y];
 		ZST[y][x] = Gdash[y][x];
@@ -316,7 +318,7 @@ int main(){
 	solveTriples(V);
 	fillW(V);
 	findST(V);
-	// printMachine(ZST);
+	printMachine(ZST);
 
 	return 0;
 }

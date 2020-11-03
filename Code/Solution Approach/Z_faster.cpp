@@ -16,12 +16,15 @@ vector<pair<ll,ll>> MSTedges;
 map<ll, ll> destination_edge;
 vector<pair<ll, ll>> centroidTriples;
 
-void printMachine(vector<vector<ll>> dp){
-	ll row = dp.size();
-	ll col = dp[0].size();
-	for(ll i=0;i<row;i++){
-		for(ll j=0;j<col;j++){
-			cout<<dp[i][j]<<" ";
+void printMachine(map<ll, map<ll, ll>> dp){
+	for(auto i : dp){
+		ll a = i.first;
+		if(dp[a].size() > 0){
+			cout<<a<<": ";
+		}
+		for(auto j : dp[a]){
+			ll b = j.first;
+			cout<<"("<<b<<" "<<dp[a][b]<<") ";
 		}
 		cout<<endl;
 	}
@@ -398,6 +401,7 @@ int main(){
 	solveTriples(V);
 	fillW(V);
 	findST(V);
+	printMachine(ZST);
 
 	return 0;
 }
