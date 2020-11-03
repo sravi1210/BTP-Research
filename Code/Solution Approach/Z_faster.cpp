@@ -190,40 +190,74 @@ void solveTriples(ll V){
 	return;
 }
 
+ll findTParent(vector<ll> parent, ll node){
+	if(parent[node] != node){
+		parent[node] = findTParent(parent, parent[node]);
+	}
+	return parent[node];
+}
+
+ll findParent(vector<ll> &parent, ll node){
+	if(parent[node] != node){
+		parent[node] = findParent(parent, parent[node]);
+	}
+	return parent[node];
+}
+
+void Union(vector<ll> &parent, vector<ll> &rank, ll node1, ll node2){
+	ll xroot = findParent(parent, node1);
+	ll yroot = findParent(parent, node2);
+
+	if(rank[xroot] < rank[yroot]){
+		parent[xroot] = yroot;
+	}
+	else if(rank[xroot] > rank[yroot]){
+		parent[yroot] = xroot;
+	}
+	else{
+		parent[yroot] = xroot;
+		rank[xroot]++;
+	}
+	return;
+}
+
 ll solveMST(map<ll, map<ll, ll>> dp, ll V){
 	MSTedges.clear();
 	ll size = dp.size();
-	vector<bool> visited(V+1, false);
+	vector<ll> parent(V+1);
+	vector<ll> rank(V+1, 0);
+	iota(parent.begin(), parent.end(), 0);
+
 	ll weightSum = 0;
 	ll count = 0;
-	while(count<size){
+
+	while(count<size-1){
 		ll minEdge = LLONG_MAX;
 		ll x = -1;
 		ll y = -1;
-
 		for(auto i : dp){
 			ll a = i.first;
 			for(auto j : dp[a]){
 				ll b = j.first;
-				if(a!=b && dp[a][b]!=-1){
-					if(!(visited[a] && visited[b])){
-						if(dp[a][b] < minEdge){
-							minEdge = dp[a][b];
-							x = a;
-							y = b;
-						}
+				if(a!=b && dp[a][b]!=-1 && (dp[a][b] < minEdge)){
+					ll aroot = findTParent(parent, a);
+					ll broot = findTParent(parent, b);
+					if(aroot != broot){
+						minEdge = dp[a][b];
+						x = a;
+						y = b;
 					}
 				}
 			}
 		}
-		if(minEdge!= LLONG_MAX && x!= -1 && y!= -1){
+		if(minEdge != LLONG_MAX && x!= -1 && y!= -1){
 			weightSum += minEdge;
-			visited[x] = true;
-			visited[y] = true;
+			Union(parent, rank, x, y);
 			MSTedges.push_back({x, y});
+			count++;
 		}
-		count++;
 	}
+
 	return weightSum;
 }
 
@@ -378,6 +412,7 @@ void findST(ll V){
 	}
 
 	solveMST(ZSTtemp, V);
+
 	size = MSTedges.size();
 	for(ll i=0;i<size;i++){
 		ll x = MSTedges[i].F;
