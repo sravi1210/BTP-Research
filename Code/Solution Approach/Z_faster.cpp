@@ -13,6 +13,7 @@ using namespace std;
 // Global variables for Graph, EDDA, CMST, destination edge servers, CMST nodes and edges.
 map<ll, ll> Wnodes;
 vector<vector<ll>> G;
+vector<vector<ll>> CST;
 vector<vector<ll>> Gdash;
 map<ll, map<ll, ll>> ZST;
 vector<vector<ll>> triples;
@@ -20,6 +21,23 @@ map<ll, map<ll, ll>> GRdash;
 vector<pair<ll,ll>> MSTedges;
 map<ll, ll> destination_edge;
 vector<pair<ll, ll>> centroidTriples;
+
+
+// Function to print the tree.
+void printTree(vector<vector<ll>> dp){
+	ll size = dp.size();
+	for(ll i=0;i<size;i++){
+		ll temp = dp[i].size();
+		if(temp > 0){
+			cout<<i<<": ";
+			for(ll j=0;j<temp;j++){
+				cout<<dp[i][j]<<" ";
+			}
+			cout<<endl;
+		}
+	}
+	return;
+}
 
 void printMachine(map<ll, map<ll, ll>> dp){
 	for(auto i : dp){
@@ -40,6 +58,7 @@ void printMachine(map<ll, map<ll, ll>> dp){
 void initialize(ll V){
 	G.clear();
 	ZST.clear();
+	CST.clear();
 	Gdash.clear();
 	Wnodes.clear();
 	GRdash.clear();
@@ -48,9 +67,11 @@ void initialize(ll V){
 	centroidTriples.clear();
 	destination_edge.clear();
 
+	vector<ll> xtemp;
 	for(ll i=0;i<=V;i++){
 		vector<ll> temp(V+1, -1);
 		G.push_back(temp);
+		CST.push_back(xtemp);
 		Gdash.push_back(temp);
 	}
 	return;
@@ -64,17 +85,12 @@ void readInputGraph(ll V, ll E, ll R, ll gamma){
 		G[node2][node1] = 1;
 	}
 
-	for(ll i=1;i<=V;i++){      // Add edges from cloud 'c' to each edge server 'v'.
-		G[0][i] = gamma;
-		G[i][0] = gamma;
-	}
-	
 	for(ll i=0;i<R;i++){    // Create a map of destination edge servers.
 		ll node;
 		cin>>node;
 		destination_edge[node] = 1;
 	}
-	destination_edge[0] = 1;
+
 	return;
 }
 
@@ -412,17 +428,91 @@ void findST(ll V){
 	}
 
 	solveMST(ZSTtemp, V);
-
 	size = MSTedges.size();
 	for(ll i=0;i<size;i++){
 		ll x = MSTedges[i].F;
 		ll y = MSTedges[i].S;
-		cout<<x<<" "<<y<<endl;
+		// cout<<x<<" "<<y<<endl;
 		ZST[x][y] = Gdash[x][y];
 		ZST[y][x] = Gdash[y][x];
 	}
 	return;
 }
+
+bool DFS(deque<ll> &sk, ll node, ll distance, ll curr, ll parent){
+	ll size = G.size();
+	if(distance==0 && curr==node){
+		return true;
+	}
+	else if(distance<=0){
+		return false;
+	}
+	for(ll i=0;i<size;i++){
+		if(i!= parent && G[curr][i] != -1){
+			sk.push_back(i);
+			if(DFS(sk, node, distance-1, i, curr)){
+				return true;
+			}
+			sk.pop_back();
+		}
+	}
+	return false;
+}
+
+void BFS(vector<bool> &visited, ll index){
+	deque<ll> dq;
+	dq.push_back(index);
+	visited[index] = true;
+	while(!dq.empty()){
+		ll curr = dq.front();
+		dq.pop_front();
+
+		for(auto i : ZST[curr]){
+			ll node = i.F;
+			if(!visited[node]){
+				if(ZST[curr][node] == 1){
+					CST[curr].push_back(node);
+				}
+				else{
+					ll distance = ZST[curr][node];
+					deque<ll> sk;
+					sk.push_back(curr);
+					DFS(sk, node, distance, curr, -1);
+					ll a = sk.front();
+					sk.pop_front();
+					while(!sk.empty()){
+						ll b = sk.front();
+						sk.pop_front();
+						CST[a].push_back(b);
+						a = b;
+					}
+				}
+				visited[node] = true;
+				dq.push_back(node);
+			}
+		}
+	}
+	return;
+}
+
+void addCloudST(ll V){
+	ll maxConnectivity = -1;
+	ll index = -1;
+	for(auto i : ZST){
+		ll node = i.F;
+		ll size = ZST[node].size();
+		if(size > maxConnectivity){
+			maxConnectivity = size;
+			index = node;
+		}
+	}
+	CST[0].push_back(index); // Add cloud server to the highest connectivity node in the approximated optimal Steiner Tree.
+	vector<bool> visited(V+1, false);
+	visited[0] = true;
+	BFS(visited, index);
+	return;
+}
+
 
 int main(){
 	ll V, E, R;          // V - Vertex, E - Edges,  R - Destination Edge Servers.
@@ -441,7 +531,10 @@ int main(){
 	solveTriples(V);
 	fillW(V);
 	findST(V);
-	printMachine(ZST);
+	addCloudST(V);
+
+	cout<<"Minimum Steiner Tree Edge List:"<<endl;
+	printTree(CST);
 
 	return 0;
 }
