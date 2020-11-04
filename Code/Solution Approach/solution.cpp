@@ -23,6 +23,8 @@ map<ll, map<ll, ll>> GRdash;
 vector<pair<ll,ll>> MSTedges;
 map<ll, ll> destination_edge;
 map<pair<ll, ll>, ll> CSTEdges;
+vector<vector<ll>> fineTunedEDD;
+map<pair<ll, ll>, ll> seenEdges;
 vector<pair<ll, ll>> centroidTriples;
 
 // Function to print the tree.
@@ -69,6 +71,8 @@ void initialize(ll V){
 	MSTedges.clear();
 	CSTEdges.clear();
 	CSTNodes.clear();
+	seenEdges.clear();
+	fineTunedEDD.clear();
 	centroidTriples.clear();
 	destination_edge.clear();
 
@@ -79,6 +83,7 @@ void initialize(ll V){
 		CST.push_back(xtemp);
 		EDD.push_back(xtemp);
 		Gdash.push_back(temp);
+		fineTunedEDD.push_back(xtemp);
 	}
 	return;
 }
@@ -621,6 +626,40 @@ void calculateEDD(ll V, ll d_limit){
 	return;
 }
 
+// Function to fine Tune the EDD Steiner Tree, for removing the non-essential edges.
+void FineTune_EDD(deque<ll> &eddDQ, vector<bool> &seen){
+	ll index = eddDQ.back();
+	ll size = EDD[index].size();
+	if(size == 0){
+		ll end = eddDQ.size()-1;
+		while(end>0){
+			if(destination_edge.find(eddDQ[end]) == destination_edge.end()){
+				end--;
+			}
+			else{
+				break;
+			}
+		}
+		for(ll i=0;i+1<=end;i++){
+			ll node1 = eddDQ[i];
+			ll node2 = eddDQ[i+1];
+			if(seenEdges.find({node1, node2}) == seenEdges.end()){
+				seenEdges[{node1, node2}] = 1;
+				fineTunedEDD[node1].push_back(node2);
+			}
+		}
+	}
+	for(ll i=0;i<size;i++){
+		ll child = EDD[index][i];
+		if(!seen[child]){
+			eddDQ.push_back(child);
+			FineTune_EDD(eddDQ, seen);
+			eddDQ.pop_back();
+		}
+	}
+	return;
+}
+
 int main(){
 	ll V, E, R;          // V - Vertex, E - Edges,  R - Destination Edge Servers.
 	cin>>V>>E>>R;
@@ -644,17 +683,28 @@ int main(){
 	printTree(CST);
 
 	calculateEDD(V, d_limit);
-	cout<<endl<<"Final EDD Approximated Tree is:"<<endl;
+
+	cout<<endl<<"EDD Approximated Tree:"<<endl;
 	printTree(EDD);
+
+	deque<ll> eddDQ;
+	eddDQ.push_back(0);
+	vector<bool> seen(V+1, false);
+	seen[0] = true;
+	
+	FineTune_EDD(eddDQ, seen);
+	
+	cout<<endl<<"Fine-Tuned final EDD Approximated Tree is:"<<endl;
+	printTree(fineTunedEDD);
 
 	ll C2E = 0;
 	ll E2E = 0;
 	for(ll i=0;i<=V;i++){
 		if(i==0){
-			C2E += EDD[i].size();
+			C2E += fineTunedEDD[i].size();
 		}
 		else{
-			E2E += EDD[i].size();
+			E2E += fineTunedEDD[i].size();
 		}
 	}
 
