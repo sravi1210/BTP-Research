@@ -1,6 +1,6 @@
 /**
  *    author:  sravi1210
- *    created: 04.11.2020 19:46:33       
+ *    created: 07.11.2020 04:08:33       
 **/
 
 #include <bits/stdc++.h>
@@ -13,6 +13,7 @@ using namespace std;
 // Global variables for Graph, EDDA, CMST, destination edge servers, CMST nodes and edges.
 map<ll, ll> Wnodes;
 vector<vector<ll>> G;
+vector<vector<ll>> TG;
 map<ll, ll> CSTNodes;
 vector<vector<ll>> CST;
 vector<vector<ll>> EDD;
@@ -61,6 +62,7 @@ void printMachine(map<ll, map<ll, ll>> dp){
 // Function to initialize global variables.
 void initialize(ll V){
 	G.clear();
+	TG.clear();
 	ZST.clear();
 	CST.clear();
 	EDD.clear();
@@ -80,6 +82,7 @@ void initialize(ll V){
 	for(ll i=0;i<=V;i++){
 		vector<ll> temp(V+1, -1);
 		G.push_back(temp);
+		TG.push_back(xtemp);
 		CST.push_back(xtemp);
 		EDD.push_back(xtemp);
 		Gdash.push_back(temp);
@@ -94,6 +97,8 @@ void readInputGraph(ll V, ll E, ll R, ll gamma){
 		cin>>node1>>node2;
 		G[node1][node2] = 1;
 		G[node2][node1] = 1;
+		TG[node1].push_back(node2);
+		TG[node2].push_back(node1);
 	}
 
 	for(ll i=0;i<R;i++){    // Create a map of destination edge servers.
@@ -105,34 +110,24 @@ void readInputGraph(ll V, ll E, ll R, ll gamma){
 	return;
 }
 
-
-ll minDistance(vector<ll> &distance, vector<bool> &visited, ll V){
-	ll index = -1;
-	ll value = LLONG_MAX;
-	for(ll i=0;i<=V;i++){
-		if(distance[i] <= value && !visited[i]){
-			value = distance[i];
-			index = i;
-		}
-	}
-	return index;
-}
-
 void createGpDash(ll V){
 	for(ll i=0;i<=V;i++){
 		vector<ll> distance(V+1, LLONG_MAX);
 		vector<bool> visited(V+1, false);
 		distance[i] = 0;
-
-		for(ll count = 0;count<=V;count++){
-			ll index = minDistance(distance, visited, V);
-			if(index == -1){
-				continue;
-			}
-			visited[index] = true;
-			for(ll j=0;j<=V;j++){
-				if((!visited[j]) && (G[index][j]!=-1) && (distance[j] > distance[index] + G[index][j]) && (distance[index] != LLONG_MAX)){
-					distance[j] = distance[index] + G[index][j];
+		visited[i] = true;
+		deque<ll> dq;
+		dq.push_back(i);
+		while(!dq.empty()){
+			ll parent = dq.front();
+			dq.pop_front();
+			ll size = TG[parent].size();
+			for(ll j=0;j<size;j++){
+				ll child = TG[parent][j];
+				if(!visited[child]){
+					dq.push_back(child);
+					visited[child] = true;
+					distance[child] = distance[parent] + 1;
 				}
 			}
 		}
@@ -257,34 +252,35 @@ ll solveMST(map<ll, map<ll, ll>> dp, ll V){
 
 	ll weightSum = 0;
 	ll count = 0;
-
-	while(count<size-1){
-		ll minEdge = LLONG_MAX;
-		ll x = -1;
-		ll y = -1;
-		for(auto i : dp){
-			ll a = i.first;
-			for(auto j : dp[a]){
-				ll b = j.first;
-				if(a!=b && dp[a][b]!=-1 && (dp[a][b] < minEdge)){
-					ll aroot = findTParent(parent, a);
-					ll broot = findTParent(parent, b);
-					if(aroot != broot){
-						minEdge = dp[a][b];
-						x = a;
-						y = b;
-					}
-				}
-			}
-		}
-		if(minEdge != LLONG_MAX && x!= -1 && y!= -1){
-			weightSum += minEdge;
-			Union(parent, rank, x, y);
-			MSTedges.push_back({x, y});
-			count++;
+	ll end = 0;
+	vector<pair<ll, pair<ll, ll>>> edges;
+	for(auto i : dp){
+		ll a = i.F;
+		for(auto j : dp){
+			ll b = j.F;
+			edges.push_back({dp[a][b], {a, b}});
+			end++;
 		}
 	}
 
+	sort(edges.begin(), edges.end());
+
+	ll start = 0;
+	while(count<size-1 && end>start){
+		pair<ll, pair<ll, ll>> data = edges[start];
+		ll edgeLen = data.F;
+		ll a = data.S.F;
+		ll b = data.S.S;
+		ll aroot = findTParent(parent, a);
+		ll broot = findTParent(parent, b);
+		if(aroot != broot){
+			weightSum += edgeLen;
+			Union(parent, rank, a, b);
+			MSTedges.push_back({a,  b});
+			count++;
+		}
+		start++;
+	}
 	return weightSum;
 }
 
@@ -411,11 +407,9 @@ void fillW(ll V){
 		if(win <= 0 || VZ == -1 || index == -1){
 			return;
 		}
+		// cout<<win<<" ";
 		visited[index] = true;
-		map<ll, map<ll, ll>> FZ;
-		FZ = createCopy(F);
-		reduceWeight(FZ, index);
-		F = createCopy(FZ);
+		reduceWeight(F, index);
 		Wnodes[VZ] = 1;
 	}
 	return;
@@ -443,7 +437,6 @@ void findST(ll V){
 	for(ll i=0;i<size;i++){
 		ll x = MSTedges[i].F;
 		ll y = MSTedges[i].S;
-		// cout<<x<<" "<<y<<endl;
 		ZST[x][y] = Gdash[x][y];
 		ZST[y][x] = Gdash[y][x];
 	}
@@ -680,7 +673,7 @@ int main(){
 	fillW(V);
 	findST(V);
 	addCloudST(V);
-
+	
 	cout<<"Minimum Steiner Tree Edge List:"<<endl;
 	printTree(CST);
 
