@@ -17,6 +17,8 @@ vector<vector<ll>> cmst;
 vector<vector<ll>> eddA;
 map<ll, ll> destination_edge;
 map<pair<ll, ll>, ll> cmstEdges;
+vector<vector<ll>> fineTunedEDD;
+map<pair<ll, ll>, ll> seenEdges;
 
 // Function to initialize global variables.
 void initialize(ll V){
@@ -26,12 +28,15 @@ void initialize(ll V){
 	destination_edge.clear();
 	cmstNodes.clear();
 	cmstEdges.clear();
+	fineTunedEDD.clear();
+	seenEdges.clear();
 
 	for(ll i=0;i<=V;i++){
 		vector<ll> temp;
 		G.push_back(temp);
 		eddA.push_back(temp);
 		cmst.push_back(temp);
+		fineTunedEDD.push_back(temp);
 	}
 	return;
 }
@@ -89,12 +94,14 @@ void updateEdges(vector<ll> &depths, vector<bool> &visited, ll index){
 		size = G[parent].size();
 		for(ll i=0;i<size;i++){
 			ll child = G[parent][i];
-			if(!visited[child] && !nvisited[child] && cmstNodes.find(child) != cmstNodes.end()){
+			if(!visited[child] && !nvisited[child]){
 				if(depths[child] > height + 1){
 					depths[child] = height + 1;
 					dq.push_back({child, height+1});
 					if(cmstEdges.find({parent, child}) == cmstEdges.end()){
 						cmstEdges[{parent, child}] = 1;
+						cmstNodes[parent] = 1;
+						cmstNodes[child] = 1;
 						cmst[parent].push_back(child);
 					}
 					nvisited[child] = true;
@@ -211,6 +218,40 @@ void EDD_A(ll V, ll d_limit){
 	return;
 }
 
+void FineTune_EDD(deque<ll> &eddDQ, vector<bool> &seen){
+	ll index = eddDQ.back();
+	ll size = eddA[index].size();
+	if(size == 0){
+		ll end = eddDQ.size()-1;
+		while(end>0){
+			if(destination_edge.find(eddDQ[end]) == destination_edge.end()){
+				end--;
+			}
+			else{
+				break;
+			}
+		}
+		for(ll i=0;i+1<=end;i++){
+			ll node1 = eddDQ[i];
+			ll node2 = eddDQ[i+1];
+			if(seenEdges.find({node1, node2}) == seenEdges.end()){
+				seenEdges[{node1, node2}] = 1;
+				fineTunedEDD[node1].push_back(node2);
+			}
+		}
+	}
+	for(ll i=0;i<size;i++){
+		ll child = eddA[index][i];
+		if(!seen[child]){
+			eddDQ.push_back(child);
+			FineTune_EDD(eddDQ, seen);
+			eddDQ.pop_back();
+		}
+	}
+	return;
+}
+
+
 int main(){
 	ll V, E, R;          // V - Vertex, E - Edges,  R - Destination Edge Servers.
 	cin>>V>>E>>R;
@@ -244,17 +285,25 @@ int main(){
 	printTree(cmst);
 
 	EDD_A(V, d_limit);
+
+	deque<ll> eddDQ;
+	eddDQ.push_back(0);
+	vector<bool> seen(V+1, false);
+	seen[0] = true;
+	
+	FineTune_EDD(eddDQ, seen);
+
 	cout<<endl<<"Final EDD Approximated Tree is:"<<endl;
-	printTree(eddA);
+	printTree(fineTunedEDD);
 
 	ll C2E = 0;
 	ll E2E = 0;
 	for(ll i=0;i<=V;i++){
 		if(i==0){
-			C2E += eddA[i].size();
+			C2E += fineTunedEDD[i].size();
 		}
 		else{
-			E2E += eddA[i].size();
+			E2E += fineTunedEDD[i].size();
 		}
 	}
 

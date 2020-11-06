@@ -548,12 +548,14 @@ void updateEdges(vector<ll> &depths, vector<bool> &visited, ll index){
 		size = G[parent].size();
 		for(ll i=0;i<size;i++){
 			ll child = i;
-			if(G[parent][i]!= -1 && !visited[child] && !nvisited[child] && CSTNodes.find(child) != CSTNodes.end()){
+			if(G[parent][i]!= -1 && !visited[child] && !nvisited[child]){
 				if(depths[child] > height + 1){
 					depths[child] = height + 1;
 					dq.push_back({child, height+1});
 					if(CSTEdges.find({parent, child}) == CSTEdges.end()){
 						CSTEdges[{parent, child}] = 1;
+						CSTNodes[parent] = 1;
+						CSTNodes[child] = 1;
 						CST[parent].push_back(child);
 					}
 					nvisited[child] = true;
