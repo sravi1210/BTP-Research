@@ -1,6 +1,6 @@
 /**
  *    author:  sravi1210
- *    created: 07.11.2020 04:08:33       
+ *    created: 07.02.2021 01:33:23       
 **/
 
 #include <bits/stdc++.h>
@@ -9,6 +9,7 @@ using namespace std;
 #define F first
 #define S second
 #define ll long long int
+#define CETC 100 // Cloud to Edge Transmission Cost.
 
 // Global variables for Graph, EDDA, CMST, destination edge servers, CMST nodes and edges.
 map<ll, ll> Wnodes;
@@ -17,12 +18,14 @@ vector<vector<ll>> TG;
 map<ll, ll> CSTNodes;
 vector<vector<ll>> CST;
 vector<vector<ll>> EDD;
+vector<vector<ll>> Next;
 vector<vector<ll>> Gdash;
 map<ll, map<ll, ll>> ZST;
 vector<vector<ll>> triples;
 map<ll, map<ll, ll>> GRdash;
 vector<pair<ll,ll>> MSTedges;
 map<ll, ll> destination_edge;
+map<pair<ll, ll>, ll> weights;
 map<pair<ll, ll>, ll> CSTEdges;
 vector<vector<ll>> fineTunedEDD;
 map<pair<ll, ll>, ll> seenEdges;
@@ -66,10 +69,12 @@ void initialize(ll V){
 	ZST.clear();
 	CST.clear();
 	EDD.clear();
+	Next.clear();
 	Gdash.clear();
 	Wnodes.clear();
 	GRdash.clear();
 	triples.clear();
+	weights.clear();
 	MSTedges.clear();
 	CSTEdges.clear();
 	CSTNodes.clear();
@@ -85,6 +90,7 @@ void initialize(ll V){
 		TG.push_back(xtemp);
 		CST.push_back(xtemp);
 		EDD.push_back(xtemp);
+		Next.push_back(temp);
 		Gdash.push_back(temp);
 		fineTunedEDD.push_back(xtemp);
 	}
@@ -93,12 +99,20 @@ void initialize(ll V){
 
 void readInputGraph(ll V, ll E, ll R, ll gamma){
 	for(ll i=0;i<E;i++){        // Create the graph with given edges.
-		ll node1, node2;
-		cin>>node1>>node2;
+		ll node1, node2, w;
+		cin>>node1>>node2>>w;
 		G[node1][node2] = 1;
 		G[node2][node1] = 1;
 		TG[node1].push_back(node2);
 		TG[node2].push_back(node1);
+		weights[{node1, node2}] = w;
+		weights[{node2, node1}] = w;
+	}
+
+	for(ll i=0;i<=V;i++){    // Set the weights of edges between cloud and edge servers to some comstant default value.
+		weights[{0, i}] = CETC;
+		weights[{i, 0}] = CETC;
+		weights[{0, 0}] = 0;
 	}
 
 	for(ll i=0;i<R;i++){    // Create a map of destination edge servers.
@@ -110,29 +124,50 @@ void readInputGraph(ll V, ll E, ll R, ll gamma){
 	return;
 }
 
-void createGpDash(ll V){
+vector<vector<ll>> FloydWarshalls(ll V){
+	vector<vector<ll>> distance(V+1, vector<ll>(V+1, INT_MAX));
 	for(ll i=0;i<=V;i++){
-		vector<ll> distance(V+1, LLONG_MAX);
-		vector<bool> visited(V+1, false);
-		distance[i] = 0;
-		visited[i] = true;
-		deque<ll> dq;
-		dq.push_back(i);
-		while(!dq.empty()){
-			ll parent = dq.front();
-			dq.pop_front();
-			ll size = TG[parent].size();
-			for(ll j=0;j<size;j++){
-				ll child = TG[parent][j];
-				if(!visited[child]){
-					dq.push_back(child);
-					visited[child] = true;
-					distance[child] = distance[parent] + 1;
+		for(ll j=0;j<=V;j++){
+			if(i == j){
+				distance[i][j] = 0;
+			}
+			else if(G[i][j] == 1){
+				distance[i][j] = weights[{i, j}];
+				Next[i][j] = j;
+			}
+		}
+	}
+
+	for(ll k=0;k<=V;k++){
+		for(ll i=0;i<=V;i++){
+			for(ll j=0;j<=V;j++){
+				if(distance[i][k] + distance[k][j] < distance[i][j]){
+					distance[i][j] = distance[i][k] + distance[k][j];
+					Next[i][j] = Next[i][k];
 				}
 			}
 		}
+	}
+
+	return distance;
+}
+
+vector<ll> ConstructPath(ll source, ll destination){
+	vector<ll> path;
+	path.push_back(source);
+	while(source != destination){
+		source = Next[source][destination];
+		path.push_back(source);
+	}
+	return path;
+}
+
+void createGpDash(ll V){
+	vector<vector<ll>> distance = FloydWarshalls(V);
+
+	for(ll i=0;i<=V;i++){
 		for(ll j=0;j<=V;j++){
-			Gdash[i][j] = distance[j];
+			Gdash[i][j] = distance[i][j];
 		}
 	}
 	return;
@@ -443,30 +478,11 @@ void findST(ll V){
 	return;
 }
 
-bool DFS_CloudST(deque<ll> &sk, ll node, ll distance, ll curr, ll parent){
-	ll size = G.size();
-	if(distance==0 && curr==node){
-		return true;
-	}
-	else if(distance<=0){
-		return false;
-	}
-	for(ll i=0;i<size;i++){
-		if(i!= parent && G[curr][i] != -1){
-			sk.push_back(i);
-			if(DFS_CloudST(sk, node, distance-1, i, curr)){
-				return true;
-			}
-			sk.pop_back();
-		}
-	}
-	return false;
-}
-
 void BFS_CloudST(vector<bool> &visited, ll index){
 	deque<ll> dq;
 	dq.push_back(index);
 	visited[index] = true;
+
 	while(!dq.empty()){
 		ll curr = dq.front();
 		dq.pop_front();
@@ -474,28 +490,13 @@ void BFS_CloudST(vector<bool> &visited, ll index){
 		for(auto i : ZST[curr]){
 			ll node = i.F;
 			if(!visited[node]){
-				if(ZST[curr][node] == 1){
-					CST[curr].push_back(node);
-					CSTEdges[{curr, node}] = 1;
-					CSTNodes[curr] = 1;
-					CSTNodes[node] = 1;
-				}
-				else{
-					ll distance = ZST[curr][node];
-					deque<ll> sk;
-					sk.push_back(curr);
-					DFS_CloudST(sk, node, distance, curr, -1);
-					ll a = sk.front();
-					sk.pop_front();
-					while(!sk.empty()){
-						ll b = sk.front();
-						sk.pop_front();
-						CST[a].push_back(b);
-						CSTEdges[{a, b}] = 1;
-						CSTNodes[a] = 1;
-						CSTNodes[b] = 1;
-						a = b;
-					}
+				vector<ll> path  = ConstructPath(curr, node);
+				ll size = path.size();
+				for(ll j=0;j+1<size;j++){
+					CST[path[j]].push_back(path[j+1]);
+					CSTEdges[{path[j], path[j+1]}] = 1;
+					CSTNodes[path[j]] = 1;
+					CSTNodes[path[j+1]] = 1;
 				}
 				visited[node] = true;
 				dq.push_back(node);
@@ -532,7 +533,7 @@ void updateEdges(vector<ll> &depths, vector<bool> &visited, ll index){
 	vector<bool> nvisited(size, false);
 	nvisited[index] = true;
 	deque<pair<ll, ll>> dq;
-	dq.push_back({index, 1});
+	dq.push_back({index, CETC});
 	while(!dq.empty()){
 		pair<ll, ll> p = dq.front();
 		dq.pop_front();
@@ -542,9 +543,10 @@ void updateEdges(vector<ll> &depths, vector<bool> &visited, ll index){
 		for(ll i=0;i<size;i++){
 			ll child = i;
 			if(G[parent][i]!= -1 && !visited[child] && !nvisited[child]){
-				if(depths[child] > height + 1){
-					depths[child] = height + 1;
-					dq.push_back({child, height+1});
+				ll sum = weights[{parent, child}];
+				if(depths[child] > height + sum){
+					depths[child] = height + sum;
+					dq.push_back({child, height+sum});
 					if(CSTEdges.find({parent, child}) == CSTEdges.end()){
 						CSTEdges[{parent, child}] = 1;
 						CSTNodes[parent] = 1;
@@ -573,9 +575,10 @@ void BFS_EDD(vector<ll> &depths, ll node, ll height){
 		ll size = CST[index].size();
 		for(ll i=0;i<size;i++){
 			ll child = CST[index][i];
-			if(depths[child] > height + 1){
-				depths[child] = height + 1;
-				dq.push_back({child, height+1});
+			ll sum = weights[{index, child}];
+			if(depths[child] > height + sum){
+				depths[child] = height + sum;
+				dq.push_back({child, height+sum});
 			}
 		}
 	}
@@ -587,7 +590,7 @@ void DFS_EDD(vector<ll> &depths, vector<bool> &visited, ll index, ll d_limit){
 	ll size = CST[index].size();
 	for(ll i=0;i<size;i++){
 		ll child = CST[index][i];
-		if(!visited[child] && (depths[child] == depths[index]+1)){
+		if(!visited[child] && (depths[child] > depths[index])){
 			if(depths[child] <= d_limit && destination_edge.find(child) != destination_edge.end()){
 				EDD[index].push_back(child);
 				visited[child] = true;
@@ -599,11 +602,11 @@ void DFS_EDD(vector<ll> &depths, vector<bool> &visited, ll index, ll d_limit){
 				DFS_EDD(depths, visited, child, d_limit);
 			}
 			else if(depths[child] > d_limit && destination_edge.find(child) != destination_edge.end()){
-				depths[child] = 1;
+				depths[child] = CETC;
 				EDD[0].push_back(child);
 				visited[child] = true;
 				updateEdges(depths, visited, child);
-				BFS_EDD(depths, child, 1);
+				BFS_EDD(depths, child, CETC);
 				DFS_EDD(depths, visited, child, d_limit);
 			} 
 		}
@@ -662,8 +665,6 @@ int main(){
 	ll d_limit, gamma;   // EDD time constraint limit - d_limit and ratio of cost of C2E and 1-hop E2E transmission - gamma. 
 	cin>>d_limit>>gamma;
 
-	d_limit += 1;
-
 	initialize(V);
 	readInputGraph(V, E, R, gamma);
 	createGpDash(V);
@@ -703,9 +704,21 @@ int main(){
 		}
 	}
 
-	cout<<endl<<"Cost C2E: "<<C2E<<" times of 1-Hop E2E"<<endl;
-	cout<<"Cost E2E: "<<E2E<<" times of 1-Hop E2E"<<endl;
-	cout<<"Total Cost By EDD-NSTE Algorithm: "<<((gamma*C2E)+E2E)<<" times of 1-Hop E2E"<<endl;
+	ll costC2E = (C2E * CETC);
+ 	ll costE2E = 0;
+
+	for(ll i=1;i<=V;i++){
+		ll size = fineTunedEDD[i].size();
+		for(ll j=0;j<size;j++){
+			costE2E += weights[{i, fineTunedEDD[i][j]}];
+		}
+	}
+
+	cout<<endl<<"Total Number Of C2E Edges: "<<C2E<<endl;
+	cout<<"Cost C2E: "<<costC2E<<endl;
+	cout<<"Total Number Of E2E Edges: "<<E2E<<endl;
+	cout<<"Cost E2E: "<<costE2E<<endl;
+	cout<<"Total Cost By EDD-NSTE Algorithm: "<<(costC2E + costE2E)<<endl;
 
 	return 0;
 }
