@@ -150,7 +150,7 @@ int main(){
 	for(auto i : edges){
 		ll src = i.first.first;
 		ll dest = i.first.second;
-		cout<<src<<" "<<dest<<endl;
+		// cout<<src<<" "<<dest<<endl;
 		costE2E += weights[{src, dest}];
 	}
 
