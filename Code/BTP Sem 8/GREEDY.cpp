@@ -154,7 +154,7 @@ int main(){
 		costE2E += weights[{src, dest}];
 	}
 
-
+	cout<<endl<<"GREEDY Algorithm Result:"<<endl;
 	cout<<"Total Number Of C2E Edges: "<<C2E<<endl;
 	cout<<"Cost C2E: "<<costC2E<<endl;
 	cout<<"Total Number Of E2E Edges: "<<E2E<<endl;

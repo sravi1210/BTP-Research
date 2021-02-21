@@ -12,6 +12,7 @@ using namespace std;
 #define CETC 100 // Cloud to Edge Transmission Cost.
 
 // Global variables for Graph, EDDA, CMST, destination edge servers, CMST nodes and edges.
+ll maxDest = 0;
 map<ll, ll> Wnodes;
 vector<vector<ll>> G;
 vector<vector<ll>> TG;
@@ -148,7 +149,6 @@ vector<vector<ll>> FloydWarshalls(ll V){
 			}
 		}
 	}
-
 	return distance;
 }
 
@@ -278,7 +278,7 @@ void Union(vector<ll> &parent, vector<ll> &rank, ll node1, ll node2){
 	return;
 }
 
-ll solveMST(map<ll, map<ll, ll>> dp, ll V){
+ll solveMST(map<ll, map<ll, ll>> &dp, ll V){
 	MSTedges.clear();
 	ll size = dp.size();
 	vector<ll> parent(V+1);
@@ -386,8 +386,7 @@ void findSave(map<ll, map<ll, ll>> &save, map<ll, map<ll, ll>> T, ll V){
 	return;
 }
 
-map<ll, map<ll, ll>> createMST(){
-	map<ll, map<ll, ll>> T;
+void createMST(map<ll, map<ll, ll>> &T){
 	ll size = MSTedges.size();
 	for(ll i=0;i<size;i++){
 		ll x = MSTedges[i].F;
@@ -395,7 +394,7 @@ map<ll, map<ll, ll>> createMST(){
 		T[x][y] = GRdash[x][y];
 		T[y][x] = GRdash[y][x];
 	}
-	return T;
+	return;
 }
 
 void reduceWeight(map<ll, map<ll, ll>> &dp, ll index){
@@ -415,10 +414,13 @@ void fillW(ll V){
 	ll size = triples.size();
 	vector<bool> visited(size, false);
 
+	ll dest_edge = 1;
+
 	while(true){
+		dest_edge++;
 		solveMST(F, V);
 		map<ll, map<ll, ll>> T;
-		T = createMST();
+		createMST(T);
 		map<ll, map<ll, ll>> save;
 		findSave(save, T, V);
 		ll win = LLONG_MIN;
@@ -662,8 +664,12 @@ int main(){
 	ll V, E, R;          // V - Vertex, E - Edges,  R - Destination Edge Servers.
 	cin>>V>>E>>R;
 
+	maxDest = R;
+
 	ll d_limit, gamma;   // EDD time constraint limit - d_limit and ratio of cost of C2E and 1-hop E2E transmission - gamma. 
 	cin>>d_limit>>gamma;
+
+	ll c = 1;
 
 	initialize(V);
 	readInputGraph(V, E, R, gamma);
@@ -675,13 +681,13 @@ int main(){
 	findST(V);
 	addCloudST(V);
 	
-	cout<<"Minimum Steiner Tree Edge List:"<<endl;
-	printTree(CST);
+	// cout<<"Minimum Steiner Tree Edge List:"<<endl;
+	// printTree(CST);
 
 	calculateEDD(V, d_limit);
 
-	cout<<endl<<"EDD Approximated Tree:"<<endl;
-	printTree(EDD);
+	// cout<<endl<<"EDD Approximated Tree:"<<endl;
+	// printTree(EDD);
 
 	deque<ll> eddDQ;
 	eddDQ.push_back(0);
@@ -690,8 +696,8 @@ int main(){
 	
 	FineTune_EDD(eddDQ, seen);
 	
-	cout<<endl<<"Fine-Tuned final EDD Approximated Tree is:"<<endl;
-	printTree(fineTunedEDD);
+	// cout<<endl<<"Fine-Tuned final EDD Approximated Tree is:"<<endl;
+	// printTree(fineTunedEDD);
 
 	ll C2E = 0;
 	ll E2E = 0;
@@ -714,7 +720,8 @@ int main(){
 		}
 	}
 
-	cout<<endl<<"Total Number Of C2E Edges: "<<C2E<<endl;
+	cout<<endl<<"EDD-NSTE Algorithm Result:"<<endl;
+	cout<<"Total Number Of C2E Edges: "<<C2E<<endl;
 	cout<<"Cost C2E: "<<costC2E<<endl;
 	cout<<"Total Number Of E2E Edges: "<<E2E<<endl;
 	cout<<"Cost E2E: "<<costE2E<<endl;

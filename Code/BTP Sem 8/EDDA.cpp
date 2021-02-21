@@ -292,8 +292,8 @@ int main(){
 	}
 
 	CMST(V);
-	cout<<"Minimum Steiner Tree Edge List:"<<endl; 
-	printTree(cmst);
+	// cout<<"Minimum Steiner Tree Edge List:"<<endl; 
+	// printTree(cmst);
 
 	EDD_A(V, d_limit);
 
@@ -304,8 +304,8 @@ int main(){
 	
 	FineTune_EDD(eddDQ, seen);
 
-	cout<<endl<<"Final EDD Approximated Tree is:"<<endl;
-	printTree(fineTunedEDD);
+	// cout<<endl<<"Final EDD Approximated Tree is:"<<endl;
+	// printTree(fineTunedEDD);
 
 	ll C2E = 0;
 	ll E2E = 0;
@@ -325,7 +325,8 @@ int main(){
 	}
 	costC2E = (C2E * CETC);
 
-	cout<<endl<<"Total Number Of C2E Edges: "<<C2E<<endl;
+	cout<<endl<<"EDD-A Algorithm Result:"<<endl;
+	cout<<"Total Number Of C2E Edges: "<<C2E<<endl;
 	cout<<"Cost C2E: "<<costC2E<<endl;
 	cout<<"Total Number Of E2E Edges: "<<E2E<<endl;
 	cout<<"Cost E2E: "<<costE2E<<endl;
