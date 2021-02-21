@@ -1,17 +1,17 @@
 #! /bin/bash
-g++ RANDOM.cpp
+g++ ./Methods/RANDOM.cpp
 ./a.out < $1
 rm a.out
 
-g++ GREEDY.cpp
+g++ ./Methods/GREEDY.cpp
 ./a.out < $1
 rm a.out
 
-g++ EDDA.cpp
+g++ ./Methods/EDDA.cpp
 ./a.out < $1
 rm a.out
 
-g++ EDDNSTE.cpp
+g++ ./Methods/EDDNSTE.cpp
 ./a.out < $1
 rm a.out
 

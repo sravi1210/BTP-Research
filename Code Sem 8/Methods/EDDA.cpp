@@ -256,6 +256,16 @@ void FineTune_EDD(deque<ll> &eddDQ, vector<bool> &seen){
 	return;
 }
 
+void RemoveFineTune(ll V){
+	for(ll i=0;i<=V;i++){
+		ll size = eddA[i].size();
+		for(ll j=0;j<size;j++){
+			ll child = eddA[i][j];
+			fineTunedEDD[i].push_back(child);
+		}
+	}
+	return;
+}
 
 int main(){
 	ll V, E, R;          // V - Vertex, E - Edges,  R - Destination Edge Servers.
@@ -303,6 +313,7 @@ int main(){
 	seen[0] = true;
 	
 	FineTune_EDD(eddDQ, seen);
+	// RemoveFineTune(V);
 
 	// cout<<endl<<"Final EDD Approximated Tree is:"<<endl;
 	// printTree(fineTunedEDD);
