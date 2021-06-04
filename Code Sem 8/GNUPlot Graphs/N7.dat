@@ -1,0 +1,9 @@
+# This file is called   N7.dat
+# Force-Deflection data for a beam and a bar
+# N		IP		EDD-NSTE	EDD-A	Greedy	RANDOM
+0		0		0		0		0		0	
+5		376		591		487		944		1748
+10		984		1187	1419	1909	4098
+25		1349	2098	2301 	3109 	5044
+30		1603	2412	2699 	3094	5417
+50 		1627	2219	2412	3831	6389

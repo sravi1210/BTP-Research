@@ -1,0 +1,8 @@
+# This file is called   N5.dat
+# Force-Deflection data for a beam and a bar
+# N		IP		EDD-NSTE	EDD-A	Greedy	RANDOM
+1.00	1491	1281	890		750		662
+1.50	1301	1211	767		891		559
+2.00	1240	981		687		614		372
+2.50	992		423		392		392		291
+3.00	621		454		324		319		212

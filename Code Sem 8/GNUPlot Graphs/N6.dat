@@ -1,0 +1,8 @@
+# This file is called   N6.dat
+# Force-Deflection data for a beam and a bar
+# N		IP		EDD-NSTE	EDD-A	Greedy	RANDOM
+0		0		0		0		0		0	
+10		184		342		397		509		732
+100		1145	1617	1255	2498	4099
+500		1559	1862	2301	7653	8881
+1000	2409	3012	3519	9004	10034

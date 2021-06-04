@@ -1,0 +1,9 @@
+# This file is called   N2.dat
+# Force-Deflection data for a beam and a bar
+# N		IP		EDD-NSTE	EDD-A	Greedy	RANDOM
+0		0		0		0		0		0	
+5		228		240		258		444		748
+10		298		320		372		598		3098
+25		349		476		479 	992 	4044
+30		572		687		714 	3094	5097
+50 		674		788		998		4598	8095
